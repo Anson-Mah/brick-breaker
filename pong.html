@@ -1,0 +1,272 @@
+<!--Name: Anson Mah-->
+<!--Date: May 13-23, 2024-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pong Demo</title>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    // Declares canvas-related variables.
+    const canvas = document.getElementById('canvas');
+    const ctx = document.getElementById('canvas').getContext('2d');
+
+    // Determines the size of the game. 
+    canvas.width = '600';
+    canvas.height = '600';
+
+    // Sets size of the ball
+    let ballSize = 10;
+
+    // Makes variables for the ball's co-ordinates
+    let ballX = canvas.width/2;
+    let ballY = canvas.height/2;
+
+    // Sets the speed of the ball
+    let speedX = Math.floor((Math.random()*2)-2);
+    let speedY = Math.floor((Math.random()*2)-2);
+
+    // Sets the player scores
+    let leftScore = 0;
+    let rightScore = 0;
+
+    // Sets paddle size
+    let paddleWidth = 5;
+    let paddleHeight = 50;
+
+    // Determines how far away from the edge the paddles are
+    let paddleOffset = 12;
+
+    // Determines how fast the CPU will move its paddle
+    let paddleSpeed = 5;
+
+    // Used to make the CPU move slower.
+    let cpuPlay_iterations = 0;
+
+    // A boolean that says whether the game is over or not.
+    let gameOver = false;
+
+    // Determines the Y-Coordinates of the paddles
+    let leftPaddleY = canvas.height/2;
+    let rightPaddleY = canvas.height/2;
+
+    function redrawEverything() {
+      // Erases Everything
+      ctx.fillStyle = 'black'
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draws Ball
+      ctx.fillStyle = 'white';
+      ctx.fillRect(ballX, ballY, ballSize, ballSize);
+
+      // Draws Left Paddle
+      ctx.fillStyle= 'white';
+      ctx.fillRect(paddleOffset, leftPaddleY, paddleWidth, paddleHeight)
+
+      // Draws Right Paddle
+      ctx.fillStyle= 'white';
+      ctx.fillRect(canvas.width-paddleOffset, rightPaddleY, paddleWidth, paddleHeight)
+
+      // Displays Score
+      ctx.fillStyle = 'white';
+      ctx.font = "45px Helvetica";
+      ctx.fillText(leftScore, canvas.width/4, 90);
+      ctx.fillText(rightScore, (canvas.width*3)/4, 90);
+
+      // Draws Middle Lines
+      let i=0;
+      while (i<canvas.width) {
+        ctx.fillStyle = 'while';
+        ctx.fillRect(canvas.width/2, i*25, 5, 10);
+        i++
+      }
+
+    }
+
+    // Changes the ball position according to the speed of the ball.
+    function updateBallPosition() {
+      ballX += speedX;
+      ballY += speedY;
+    }
+
+    // Adds collision to the game
+    function checkForCollision() {
+      // Makes the Ball 2D
+      let ballLocation = {
+        top: ballY,
+        bottom: ballY + ballSize,
+        left: ballX,
+        right: ballX + ballSize,
+      }
+
+      // Makes the Left Paddle 2D
+      let leftPaddleLocation = {
+        top: leftPaddleY,
+        bottom: leftPaddleY + paddleHeight,
+        left: paddleOffset,
+        right: paddleOffset + paddleWidth,
+      }
+
+      // Makes the Right Paddle 2D
+      let rightPaddleLocation = {
+        top: rightPaddleY,
+        bottom: rightPaddleY + paddleHeight,
+        left: canvas.width-paddleOffset - paddleWidth,
+        right: canvas.width-paddleOffset,
+      }
+
+      // Ball Collision with Screen Edge
+      // Also Updates Score
+      if (ballLocation.top < 0) {
+        speedY = Math.abs(speedY);
+      }
+      if (ballLocation.right > canvas.width) {
+        speedX = -speedX;
+        leftScore++;
+        startNewRound('right');
+      }
+      if (ballLocation.bottom > canvas.height) {
+        speedY = -speedY;
+      }
+      if (ballLocation.left < 0) {
+        speedX = Math.abs(speedX);
+        rightScore++;
+        startNewRound('left');
+      }
+
+      // Ball Collision with Left Paddle
+      if (ballLocation.left < leftPaddleLocation.right && ballLocation.right > leftPaddleLocation.left && ballLocation.top < leftPaddleLocation.bottom && ballLocation.bottom > leftPaddleLocation.top) {
+        speedX = -speedX;
+        let distanceFromTop = ballLocation.top - leftPaddleLocation.top;
+        let distanceFromBottom = leftPaddleLocation.bottom - ballLocation.bottom;
+        changeBallAngle(distanceFromTop, distanceFromBottom);
+      }
+
+      // Ball Collision with Right Paddle
+      if (ballLocation.left < rightPaddleLocation.right && ballLocation.right > rightPaddleLocation.left && ballLocation.top < rightPaddleLocation.bottom && ballLocation.bottom > rightPaddleLocation.top) {
+        speedX = -speedX;
+        let distanceFromTop = ballLocation.top - rightPaddleLocation.top;
+        let distanceFromBottom = rightPaddleLocation.bottom - ballLocation.bottom;
+        changeBallAngle(distanceFromTop, distanceFromBottom);
+      }
+
+      // Ends the game when either player scores 7.
+      if (leftScore > 6 || rightScore > 6) {
+        gameOver = true;
+      }
+
+    }
+
+    // Changes the angle that the ball travels when it bounces from a paddle.
+    function changeBallAngle(distanceFromTop, distanceFromBottom) {
+      if (distanceFromTop<0) {
+        speedY--;
+        // Ensures that the ball always moves vertically.
+        if (speedY==0) {
+          speedY++;
+        }
+      } else if (distanceFromBottom<0) {
+        speedY++;
+        // Ensures that the ball always moves vertically.
+        if (speedY==0) {
+          speedY--;
+        }
+      }
+    }
+
+    function startNewRound(direction) {
+      // Moves the ball back to the center. 
+      ballX = canvas.width/2;
+      ballY = canvas.height/2;
+
+      // Resets the speed of the ball.
+      speedY = Math.floor((Math.random()*2)-2);
+
+      // Controls the direction that the ball goes depending on who most recently scored.
+      if (direction == 'left') {
+        speedX = -Math.floor((Math.random()*2)-2);
+      } else {
+        speedX = Math.floor((Math.random()*2)-2);
+      }
+    }
+
+    // Controls how the CPU functions
+    function cpuPlay() {
+      // Declares ball position and CPU paddle podition.
+      let ball = ballY + ballSize/2;
+      let leftPaddle = leftPaddleY + paddleHeight/2;
+
+      // Used to slow down the paddle.
+      cpuPlay_iterations++;
+      if (cpuPlay_iterations%3==0) {
+        if (ball < leftPaddle) {
+          leftPaddleY -= paddleSpeed;
+        } 
+        if (ball > leftPaddle) {
+          leftPaddleY += paddleSpeed;
+        }
+      }
+    }
+
+    // Enables user to move their paddle with their mouse.
+    document.addEventListener('mousemove', (e)=> {
+      rightPaddleY = e.offsetY;
+    })
+
+    // Allows user to use the keyboard to move the paddle.
+    document.addEventListener('keydown', (e)=> {
+      switch (e.key) {
+
+        case "ArrowUp":
+        case "W":
+        case "w":
+          rightPaddleY-=15;
+        break;
+
+        case "ArrowDown":
+        case "S":
+        case "s":
+          rightPaddleY+=15;
+        break;
+
+      }
+    })
+
+    // Function that calls the other functions. 
+    function updateGameState() {
+      redrawEverything();
+      updateBallPosition();
+      checkForCollision();
+      cpuPlay();
+      if (gameOver === false) {
+        // Funcion calls itself as long as the game is still being played.
+        setTimeout(updateGameState, 7);
+      } else {
+        // When the game ends, it shows who wins. 
+        redrawEverything();
+        ctx.fillStyle = 'white';
+        ctx.font = "45px Helvetica";
+        ctx.fillText(leftScore, canvas.width/4, 90);
+        ctx.fillText(rightScore, (canvas.width*3)/4, 90);
+        ctx.textAlign = 'center';
+        if (leftScore > rightScore) {
+          ctx.fillText('CPU Wins', canvas.width/2, canvas.height/2);
+        } else {
+          ctx.fillText('You Win!', canvas.width/2, canvas.height/2);
+        }
+      }
+    }
+
+    // Starts the entire game.
+    updateGameState();
+  </script>
+</body>
+
+</html>

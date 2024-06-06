@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Atari Breakout</title>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+	<script>
+		// Declares canvas-related variables.
+		const canvas = document.getElementById('canvas');
+		const ctx = document.getElementById('canvas').getContext('2d');
+
+		// Determines the size of the game. 
+		canvas.width = '600';
+		canvas.height = '600';
+
+		// Sets size of the ball
+		let ballSize = 10;
+
+		// Makes variables for ball co-ordinates
+		let ballX = canvas.width/2 - ballSize/2;
+		let ballY = canvas.height/2 - ballSize/2;
+
+    // Sets paddle size
+    let paddleShort = 6;
+    let paddleLong = 60;
+
+		// Makes a variable for the paddle position
+		// Places the paddle at the center
+		let paddleX = canvas.width/2 - paddleLong/2; 
+
+    // Determines how far away from the edge the paddle is
+    let paddleOffset = 20;
+
+		// Sets the speed of the ball
+		let speedX = 1;
+		let speedY = 3;
+
+		// Declares player score
+		let score = 0;
+
+		// Declares # of lives the player has
+		let lives = 3;
+
+    // A boolean that determines whether the game is over or not.
+    let gameOver = false;
+
+		function redrawEverything() {
+      // Erases Everything
+      ctx.fillStyle = 'black'
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draws Ball
+      ctx.fillStyle = 'white';
+      ctx.fillRect(ballX, ballY, ballSize, ballSize);
+
+      // Draws Paddle
+      ctx.fillStyle= 'white';
+      ctx.fillRect(paddleX, canvas.width - paddleOffset, paddleLong, paddleShort)
+
+      // Displays Score
+      ctx.fillStyle = 'white';
+      ctx.font = "17px Helvetica";
+      ctx.fillText(`Score: ${score}`, 15, 30);
+
+			// Displays # of Lives
+      ctx.fillStyle = 'white';
+      ctx.font = "17px Helvetica";
+      ctx.fillText(`Lives: ${lives}`, 100, 30);
+    }
+
+    // Changes the ball position according to the speed of the ball.
+    function updateBallPosition() {
+      ballX += speedX;
+      ballY += speedY;
+    }
+
+    // Adds collision to the game
+    function checkForCollision() {
+      // Makes the ball 2D
+      let ballLocation = {
+        top: ballY,
+        bottom: ballY + ballSize,
+        left: ballX,
+        right: ballX + ballSize,
+      }
+
+      // Makes the paddle 2D
+      let paddleLocation = {
+        top: canvas.height - paddleOffset - paddleShort,
+        bottom: canvas.height - paddleOffset,
+        left: paddleX,
+        right: paddleX + paddleLong,
+      }
+
+      // Ball Collision with Top Edge
+      if (ballLocation.top < 0) {
+				speedY = -speedY;
+			}
+
+			// Ball Collision with Left & Right Edge
+      if (ballLocation.left < 0 || ballLocation.right > canvas.width) {
+				speedX = -speedX;
+			}
+
+      // Ball Collision with Bottom Edge
+      if (ballLocation.bottom > canvas.height) {
+				speedY = -speedY;
+				lives--;
+				if (lives<0) {
+					gameOver = true;
+				}
+			}
+    }
+
+    // Enables user to move the paddle with their mouse.
+    document.addEventListener('mousemove', (e)=> {
+      paddleX = e.offsetX;
+    })
+
+    // Allows user to use the keyboard to move the paddle.
+    document.addEventListener('keydown', (e)=> {
+      switch (e.key) {
+        case "ArrowLeft":
+        case "A":
+        case "a":
+					paddleX-=15;
+        break;
+
+        case "ArrowRight":
+        case "D":
+        case "d":
+					paddleX+=15;
+        break;
+      }
+    })
+
+    // Updates the game 
+    function updateGameState() {
+      redrawEverything();
+			// gameOver = true;
+			if (gameOver) {
+				gameOverFunction();
+				return;
+			}
+      updateBallPosition();
+      checkForCollision();
+			setTimeout(updateGameState, 7);
+    }
+
+    // Starts the game.
+    updateGameState();
+
+		// Function is called if the player loses.
+		function gameOverFunction() {
+			// Displays "Game Over"
+      ctx.fillStyle = 'white';
+      ctx.font = "55px Helvetica";
+      ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.23);
+		}
+	</script>
+</body>
+</html>
