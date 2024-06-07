@@ -38,6 +38,9 @@
 		let speedX = 1;
 		let speedY = 3;
 
+		// Sets the speed of the paddle
+		let paddleSpeed = 0;
+
 		// Declares player score
 		let score = 0;
 
@@ -46,6 +49,21 @@
 
     // A boolean that determines whether the game is over or not.
     let gameOver = false;
+
+		// Boolean that checks if the player has clicked on the screen or not.
+		screen_clicked = false;
+
+		// Seven Rows and Twelve Columns of Bricks
+		// Number Represents the Score Value of the Brick
+		const bricks = [
+			['7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '7'],
+			['6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6'],
+			['5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5'],
+			['4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4'],
+			['3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3'],
+			['2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2'],
+			['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
+		]
 
 		function redrawEverything() {
       // Erases Everything
@@ -69,18 +87,28 @@
       ctx.fillStyle = 'white';
       ctx.font = "17px Helvetica";
       ctx.fillText(`Lives: ${lives}`, 100, 30);
+
+			// Displays "Click to Start" if game has not been started.
+			if (!screen_clicked) {
+				ctx.fillStyle = 'white';
+				ctx.font = "55px Helvetica";
+      	ctx.fillText("Click to Start", canvas.width/4.2, canvas.height/1.25);
+			}
     }
 
-    // Changes the ball position according to the speed of the ball.
-    function updateBallPosition() {
+    function updatePositions() {
+    	// Changes the ball position according to the speed of the ball.
       ballX += speedX;
       ballY += speedY;
+
+			// Changes the paddle position if the user is using the keyboard to control it.
+			paddleX += paddleSpeed;
     }
 
     // Adds collision to the game
     function checkForCollision() {
       // Makes the ball 2D
-      let ballLocation = {
+      let ball2D = {
         top: ballY,
         bottom: ballY + ballSize,
         left: ballX,
@@ -88,7 +116,7 @@
       }
 
       // Makes the paddle 2D
-      let paddleLocation = {
+      let paddle2D = {
         top: canvas.height - paddleOffset - paddleShort,
         bottom: canvas.height - paddleOffset,
         left: paddleX,
@@ -96,43 +124,90 @@
       }
 
       // Ball Collision with Top Edge
-      if (ballLocation.top < 0) {
+      if (ball2D.top < 0) {
 				speedY = -speedY;
 			}
 
 			// Ball Collision with Left & Right Edge
-      if (ballLocation.left < 0 || ballLocation.right > canvas.width) {
+      if (ball2D.left < 0 || ball2D.right > canvas.width) {
 				speedX = -speedX;
 			}
 
       // Ball Collision with Bottom Edge
-      if (ballLocation.bottom > canvas.height) {
-				speedY = -speedY;
+      if (ball2D.bottom > canvas.height) {
 				lives--;
+				ballX = canvas.width/2 - ballSize/2;
+				ballY = canvas.height/2 - ballSize/2;
 				if (lives<0) {
 					gameOver = true;
 				}
+			}
+
+			// Ball Collision with Paddle
+			if (
+				ball2D.left < paddle2D.right &&
+				ball2D.right > paddle2D.left && 
+				ball2D.top < paddle2D.bottom && 
+				ball2D.bottom > paddle2D.top 
+			) {
+				speedY = -speedY;
 			}
     }
 
     // Enables user to move the paddle with their mouse.
     document.addEventListener('mousemove', (e)=> {
       paddleX = e.offsetX;
+
+			// Makes paddle stay in-bounds even if the mouse is offscreen.
+			if (paddleX + paddleLong > canvas.width) {
+				paddleX = canvas.width - paddleLong;
+			} else if (paddleX < 0) {
+				paddleX = 0;
+			}
     })
 
-    // Allows user to use the keyboard to move the paddle.
+
     document.addEventListener('keydown', (e)=> {
+	
+			// Allows user to use the keyboard to move the paddle.
       switch (e.key) {
         case "ArrowLeft":
         case "A":
         case "a":
-					paddleX-=15;
+					paddleSpeed = -3;
         break;
 
         case "ArrowRight":
         case "D":
         case "d":
-					paddleX+=15;
+					paddleSpeed = 3;
+        break;
+
+				// Allows user to press Enter to start the game.
+				case "Enter":
+				if (screen_clicked) {
+					return;
+				} else {
+					screen_clicked = true;
+					updateGameState();
+				}
+				break;
+      }
+    })
+
+		// Makes paddle stop moving if key is released. 
+		document.addEventListener('keyup', (e)=> {
+      switch (e.key) {
+        case "ArrowLeft":
+        case "A":
+        case "a":
+					paddleSpeed = 0;
+        break;
+
+        case "ArrowRight":
+        case "D":
+        case "d":
+				paddleSpeed = 0;
         break;
       }
     })
@@ -145,21 +220,47 @@
 				gameOverFunction();
 				return;
 			}
-      updateBallPosition();
+      updatePositions();
       checkForCollision();
 			setTimeout(updateGameState, 7);
     }
 
-    // Starts the game.
-    updateGameState();
+    // Starts the game on click.
+		document.addEventListener('click', ()=> {
+			if (screen_clicked) {
+				return;
+			} else {
+				screen_clicked = true;
+				updateGameState();
+			}
+    })
 
 		// Function is called if the player loses.
 		function gameOverFunction() {
 			// Displays "Game Over"
       ctx.fillStyle = 'white';
       ctx.font = "55px Helvetica";
-      ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.23);
+      ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.25);
+
+			// Displays "Click to Restart"
+			ctx.font = "19px Helvetica";
+      ctx.fillText("Click to Restart", canvas.width/2.51, canvas.height/1.16);
+
+			// Resets variables.
+			screen_clicked = false;
+			gameOver = false;
+			ballX = canvas.width/2 - ballSize/2;
+			ballY = canvas.height/2 - ballSize/2;
+			paddleX = canvas.width/2 - paddleLong/2; 
+			speedX = 1;
+			speedY = 3;
+			paddleSpeed = 0;
+			score = 0;
+			lives = 3;
 		}
+		
+		// Displays the Game
+		redrawEverything()
 	</script>
 </body>
 </html>
