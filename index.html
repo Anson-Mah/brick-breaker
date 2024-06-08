@@ -3,7 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Atari Breakout</title>
+	<title>Brick Breaker</title>
+	<link rel="shortcut icon" href="favicon.png" type="image/x-icon">
 </head>
 <body>
 	<canvas id="canvas"></canvas>
@@ -46,8 +47,11 @@
 		// Declares # of lives the player has
 		let lives = 3;
 
-    // A boolean that determines whether the game is over or not
+    // Boolean that determines whether the game is over or not
     let gameOver = false;
+
+		// Boolean that determines whether the user won or lost
+		let win = false;
 
 		// Boolean that checks if the player has clicked on the screen or not
 		screen_clicked = false;
@@ -89,7 +93,7 @@
 			// Displays # of Lives
       ctx.fillStyle = 'white';
       ctx.font = "17px Helvetica";
-      ctx.fillText(`Lives: ${lives}`, 100, 30);
+      ctx.fillText(`Lives: ${lives}`, 120, 30);
 
 			// Displays "Click to Start" if game has not been started.
 			if (!screen_clicked) {
@@ -242,6 +246,10 @@
 					speedY = -speedY;
 					score += bricks[i].value
 					bricks.splice(i, 1);
+					if (bricks.length == 0) {
+						gameOver = true;
+						win = true;
+					}
 				}
 			}
     }
@@ -250,7 +258,6 @@
     document.addEventListener('mousemove', (e)=> {
       paddleX = e.offsetX;
     })
-
 
     document.addEventListener('keydown', (e)=> {
 			// Allows user to use the keyboard to move the paddle.
@@ -299,7 +306,6 @@
     // Updates the game 
     function updateGameState() {
       redrawEverything();
-			// gameOver = true;
 			if (gameOver) {
 				gameOverFunction();
 				return;
@@ -321,10 +327,17 @@
 
 		// Function is called if the player loses.
 		function gameOverFunction() {
-			// Displays "Game Over"
-      ctx.fillStyle = 'white';
-      ctx.font = "55px Helvetica";
-      ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.25);
+			if (win) {
+				// Displays "You Win!"
+				ctx.fillStyle = 'white';
+				ctx.font = "55px Helvetica";
+				ctx.fillText("You Win!", canvas.width/3.1, canvas.height/1.25);
+			} else {
+				// Displays "Game Over"
+				ctx.fillStyle = 'white';
+				ctx.font = "55px Helvetica";
+				ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.25);
+			}
 
 			// Displays "Click to Restart"
 			ctx.font = "19px Helvetica";
@@ -340,6 +353,10 @@
 			speedY = 3;
 			score = 0;
 			lives = 3;
+
+			// Erases bricks and rebuilds them.
+			bricks = [];
+			createBricks();
 		}
 		
 		// Displays the Game
