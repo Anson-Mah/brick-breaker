@@ -1,4 +1,4 @@
-# Brick Beaker game with Javascript
+# [Brick Breaker game with Javascript](https://anson-mah-acitech.github.io/brick-breaker/)
 
 The goal of the game is to destroy all of the bricks. 
 
