@@ -12,31 +12,30 @@
 		const canvas = document.getElementById('canvas');
 		const ctx = document.getElementById('canvas').getContext('2d');
 
-		// Determines the size of the game. 
+		// Determines the size of the canvas
 		canvas.width = '600';
 		canvas.height = '600';
 
 		// Sets size of the ball
 		let ballSize = 10;
 
-		// Makes variables for ball co-ordinates
+		// Makes variables for ball co-ordinates; Places the ball at the center
 		let ballX = canvas.width/2 - ballSize/2;
 		let ballY = canvas.height/2 - ballSize/2;
+		
+		// Sets the speed of the ball
+		let speedX = 1;
+		let speedY = 3;
 
     // Sets paddle size
     let paddleShort = 6;
     let paddleLong = 60;
 
-		// Makes a variable for the paddle position
-		// Places the paddle at the center
+		// Makes a variable for the paddle position; Places the paddle at the center
 		let paddleX = canvas.width/2 - paddleLong/2; 
 
     // Determines how far away from the edge the paddle is
     let paddleOffset = 20;
-
-		// Sets the speed of the ball
-		let speedX = 1;
-		let speedY = 3;
 
 		// Sets the speed of the paddle
 		let paddleSpeed = 0;
@@ -47,23 +46,27 @@
 		// Declares # of lives the player has
 		let lives = 3;
 
-    // A boolean that determines whether the game is over or not.
+    // A boolean that determines whether the game is over or not
     let gameOver = false;
 
-		// Boolean that checks if the player has clicked on the screen or not.
+		// Boolean that checks if the player has clicked on the screen or not
 		screen_clicked = false;
 
-		// Seven Rows and Twelve Columns of Bricks
-		// Number Represents the Score Value of the Brick
-		const bricks = [
-			['7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '7'],
-			['6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6', '6'],
-			['5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5'],
-			['4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4', '4'],
-			['3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3'],
-			['2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2', '2'],
-			['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'],
-		]
+		// Makes an array for the bricks
+		let bricks = [];
+
+		// Sets size of the bricks
+		let brickHeight = 15;
+		let brickWidth = 43;
+
+		// # of rows of bricks 
+		let rows = 7;
+
+		// # of columns of bricks
+		let columns = 12;
+
+		// Gives some space between each brick
+		let gap = 5;
 
 		function redrawEverything() {
       // Erases Everything
@@ -94,6 +97,12 @@
 				ctx.font = "55px Helvetica";
       	ctx.fillText("Click to Start", canvas.width/4.2, canvas.height/1.25);
 			}
+
+			// Draws Bricks
+			bricks.forEach(brick => {
+				ctx.fillStyle = brick.color;
+				ctx.fillRect(brick.x, brick.y, brickWidth, brickHeight);
+			});
     }
 
     function updatePositions() {
@@ -104,6 +113,60 @@
 			// Changes the paddle position if the user is using the keyboard to control it.
 			paddleX += paddleSpeed;
     }
+
+		function createBricks() {
+			for (let r=0; r < rows; r++) {
+				// Determines the brick color and score value based on the row the brick is in
+				switch (r) {
+					case 0:
+						color = 'red';
+						value = 7;
+					break;
+
+					case 1:
+						color = 'orange';
+						value = 6;
+					break;
+
+					case 2:
+						color = 'yellow'
+						value = 5;
+					break;
+
+					case 3:
+						color = 'green'
+						value = 4;
+					break;
+
+					case 4:
+						color = 'turquoise'
+						value = 3;
+					break;
+
+					case 5:
+						color = 'indigo'
+						value = 2;
+					break;
+
+					case 6:
+						color = 'purple' 
+						value = 1;
+					break;
+				}
+				for (let c=0; c < columns; c++) {
+					let brick = {
+						x : c*(gap + brickWidth) + gap + 8,
+            y : r*(gap+brickHeight) + gap + 40,
+            width : brickWidth,
+            height : brickHeight,
+            break : false,
+						value: value,
+						color: color,
+					}
+					bricks.push(brick);
+				}
+			}
+		}
 
     // Adds collision to the game
     function checkForCollision() {
@@ -138,7 +201,7 @@
 				lives--;
 				ballX = canvas.width/2 - ballSize/2;
 				ballY = canvas.height/2 - ballSize/2;
-				if (lives<0) {
+				if (lives<=0) {
 					gameOver = true;
 				}
 			}
@@ -151,24 +214,45 @@
 				ball2D.bottom > paddle2D.top 
 			) {
 				speedY = -speedY;
+				ballY--; // Prevents Additionall Collisions
+			}
+
+			// Paddle Collision with Screen Edge
+			if (paddleX + paddleLong > canvas.width) {
+				paddleX = canvas.width - paddleLong;
+			} else if (paddleX < 0) {
+				paddleX = 0;
+			}
+
+			// Ball Collision with Brick
+			for (i=0; i < bricks.length; i++) {
+				let brick2D = {
+					top: bricks[i].y,
+					bottom: bricks[i].y + bricks[i].height,
+					left: bricks[i].x,
+					right: bricks[i].x + bricks[i].width,
+				}
+
+				if (
+					ball2D.left < brick2D.right &&
+					ball2D.right > brick2D.left && 
+					ball2D.top < brick2D.bottom && 
+					ball2D.bottom > brick2D.top 
+				) {
+					speedY = -speedY;
+					score += bricks[i].value
+					bricks.splice(i, 1);
+				}
 			}
     }
 
     // Enables user to move the paddle with their mouse.
     document.addEventListener('mousemove', (e)=> {
       paddleX = e.offsetX;
-
-			// Makes paddle stay in-bounds even if the mouse is offscreen.
-			if (paddleX + paddleLong > canvas.width) {
-				paddleX = canvas.width - paddleLong;
-			} else if (paddleX < 0) {
-				paddleX = 0;
-			}
     })
 
 
     document.addEventListener('keydown', (e)=> {
-	
 			// Allows user to use the keyboard to move the paddle.
       switch (e.key) {
         case "ArrowLeft":
@@ -185,12 +269,12 @@
 
 				// Allows user to press Enter to start the game.
 				case "Enter":
-				if (screen_clicked) {
-					return;
-				} else {
-					screen_clicked = true;
-					updateGameState();
-				}
+					if (screen_clicked) {
+						return;
+					} else {
+						screen_clicked = true;
+						updateGameState();
+					}
 				break;
       }
     })
@@ -207,7 +291,7 @@
         case "ArrowRight":
         case "D":
         case "d":
-				paddleSpeed = 0;
+					paddleSpeed = 0;
         break;
       }
     })
@@ -254,13 +338,13 @@
 			paddleX = canvas.width/2 - paddleLong/2; 
 			speedX = 1;
 			speedY = 3;
-			paddleSpeed = 0;
 			score = 0;
 			lives = 3;
 		}
 		
 		// Displays the Game
-		redrawEverything()
+		createBricks();
+		redrawEverything();
 	</script>
 </body>
 </html>
