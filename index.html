@@ -259,6 +259,11 @@
       paddleX = e.offsetX;
     })
 
+		// Adds touch support
+		document.addEventListener('touchmove', (e)=> {
+			paddleX = e.touches[0].pageX - e.touches[0].target.offsetLeft;    
+    })
+
     document.addEventListener('keydown', (e)=> {
 			// Allows user to use the keyboard to move the paddle.
       switch (e.key) {
@@ -316,15 +321,18 @@
 			setTimeout(updateGameState, 7);
     }
 
-    // Starts the game on click.
-		document.addEventListener('click', ()=> {
+    // Starts the game on click or touch.
+		document.addEventListener('mousedown', start_game);
+		document.addEventListener('touchstart', start_game);
+
+		function start_game() {
 			if (screen_clicked) {
 				return;
 			} else {
 				screen_clicked = true;
 				updateGameState();
 			}
-    })
+		}
 
 		// Function is called if the player loses.
 		function gameOverFunction() {
