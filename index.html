@@ -6,43 +6,8 @@
 	<title>Brick Breaker</title>
 	<link rel="shortcut icon" href="favicon.png" type="image/x-icon">
 </head>
-<style>
-	canvas {
-		max-width: 600px;
-		margin-bottom: 2ch;
-	}
-	#container_buttons {
-		display: flex;
-		justify-content: center;
-		gap: 1ch;
-		width: 600px;
-	} 
-	button {
-		max-width: 8em;
-		width: 10vw;
-		height: 2em;
-	}
-	@media (orientation: landscape) {
-		canvas {
-			max-height: 600px;
-			height: 100vh;
-			max-width: fit-content;
-		}
-	}
-	@media (hover: hover) {
-		#container_buttons {
-			display: none;
-		}
-	}
-</style>
 <body>
-	<div id="container_all">
-		<canvas id="canvas"></canvas>
-		<div id="container_buttons">
-			<button id="left-button"> < </button>
-			<button id="right-button"> > </button>
-		</div>
-	</div>
+	<canvas id="canvas"></canvas>
 	<script>
 		// Declares canvas-related variables.
 		const canvas = document.getElementById('canvas');
@@ -106,8 +71,6 @@
 
 		// Gives some space between each brick
 		let gap = 5;
-
-		let hover_hover = window.matchMedia("(hover: hover)");
 
 		function redrawEverything() {
       // Erases Everything
@@ -293,7 +256,7 @@
 
     // Enables user to move the paddle with their mouse.
     document.addEventListener('mousemove', (e)=> {
-      if (!hover_hover) { paddleX = e.offsetX; }
+      paddleX = e.offsetX;
     })
 
     document.addEventListener('keydown', (e)=> {
@@ -340,22 +303,6 @@
         break;
       }
     })
-
-		document.getElementById('left-button').addEventListener('touchstart', ()=> {
-			paddleSpeed = -3;
-		})
-
-		document.getElementById('right-button').addEventListener('touchstart', ()=> {
-			paddleSpeed = 3;
-		})
-
-		document.getElementById('left-button').addEventListener('touchend', ()=> {
-			paddleSpeed = 0;
-		})
-
-		document.getElementById('right-button').addEventListener('touchend', ()=> {
-			paddleSpeed = 0;
-		})
 
     // Updates the game 
     function updateGameState() {
