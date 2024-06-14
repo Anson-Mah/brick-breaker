@@ -6,8 +6,29 @@
 	<title>Brick Breaker</title>
 	<link rel="shortcut icon" href="favicon.png" type="image/x-icon">
 </head>
+<style>
+	body {
+		background-color: black;
+		display: flex;
+		justify-content: center;
+		margin-top: 1em;
+	}
+	canvas {
+		border: 10px solid white;
+	}
+	svg {
+		padding: 0.3em;
+		cursor: pointer;
+		background-color: lightgrey;
+		height: 2em;
+		margin: 10px 10px 0 10px;
+	}
+</style>
 <body>
 	<canvas id="canvas"></canvas>
+	<svg viewBox="0 0 32 32" id="toggleTheme">
+    <path d="M27.5 11.5v-7h-7L16 0l-4.5 4.5h-7v7L0 16l4.5 4.5v7h7L16 32l4.5-4.5h7v-7L32 16l-4.5-4.5zM16 25.4V6.6c5.2 0 9.4 4.2 9.4 9.4s-4.2 9.4-9.4 9.4z" />
+  </svg>
 	<script>
 		// Declares canvas-related variables.
 		const canvas = document.getElementById('canvas');
@@ -25,8 +46,8 @@
 		let ballY = canvas.height/2 - ballSize/2;
 		
 		// Sets the speed of the ball
-		let speedX = 1;
-		let speedY = 3;
+		let speedX = Math.random()+1;
+		let speedY = Math.random()+2;
 
     // Sets paddle size
     let paddleShort = 6;
@@ -72,32 +93,37 @@
 		// Gives some space between each brick
 		let gap = 5;
 
+		// Theme-Related Variables
+		let backgroundColor = 'black';
+		let elementColor = 'white';
+		let isLightMode = false;
+
 		function redrawEverything() {
       // Erases Everything
-      ctx.fillStyle = 'black'
+      ctx.fillStyle = backgroundColor
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draws Ball
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = elementColor;
       ctx.fillRect(ballX, ballY, ballSize, ballSize);
 
       // Draws Paddle
-      ctx.fillStyle= 'white';
+      ctx.fillStyle= elementColor;
       ctx.fillRect(paddleX, canvas.width - paddleOffset, paddleLong, paddleShort)
 
       // Displays Score
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = elementColor;
       ctx.font = "17px Helvetica";
       ctx.fillText(`Score: ${score}`, 15, 30);
 
 			// Displays # of Lives
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = elementColor;
       ctx.font = "17px Helvetica";
       ctx.fillText(`Lives: ${lives}`, 120, 30);
 
 			// Displays "Click to Start" if game has not been started.
 			if (!screen_clicked) {
-				ctx.fillStyle = 'white';
+				ctx.fillStyle = elementColor;
 				ctx.font = "55px Helvetica";
       	ctx.fillText("Click to Start", canvas.width/4.2, canvas.height/1.25);
 			}
@@ -157,6 +183,7 @@
 						value = 1;
 					break;
 				}
+				// Builds the array of bricks
 				for (let c=0; c < columns; c++) {
 					let brick = {
 						x : c*(gap + brickWidth) + gap + 8,
@@ -180,6 +207,7 @@
         bottom: ballY + ballSize,
         left: ballX,
         right: ballX + ballSize,
+				center: ballX + (ballSize/2)
       }
 
       // Makes the paddle 2D
@@ -188,6 +216,7 @@
         bottom: canvas.height - paddleOffset,
         left: paddleX,
         right: paddleX + paddleLong,
+				center: paddleX + (paddleLong/2)
       }
 
       // Ball Collision with Top Edge
@@ -202,11 +231,22 @@
 
       // Ball Collision with Bottom Edge
       if (ball2D.bottom > canvas.height) {
-				lives--;
+				lives--; // Subtracts one life
+
+				// Repositions ball to the center
 				ballX = canvas.width/2 - ballSize/2;
 				ballY = canvas.height/2 - ballSize/2;
+
+				// Game ends if no lives left
 				if (lives<=0) {
 					gameOver = true;
+				}
+
+				// Ball goes in the general direction of the paddle
+				if (canvas.width/2 < paddle2D.center) {
+					speedX = Math.abs(speedX);
+				} else if (canvas.width/2 > paddle2D.center) {
+					speedX = -Math.abs(speedX);
 				}
 			}
 
@@ -217,8 +257,15 @@
 				ball2D.top < paddle2D.bottom && 
 				ball2D.bottom > paddle2D.top 
 			) {
-				speedY = -speedY;
+				speedY = -speedY; // Ricochets the ball
 				ballY--; // Prevents Additionall Collisions
+
+				// Direction of ball depends on where on the paddle it contacted
+				if (ball2D.center > paddle2D.center + paddleLong/4) {
+					speedX = Math.abs(speedX);
+				} else if (ball2D.center < paddle2D.center - paddleLong/4) {
+					speedX = -Math.abs(speedX);
+				}
 			}
 
 			// Paddle Collision with Screen Edge
@@ -255,12 +302,12 @@
     }
 
     // Enables user to move the paddle with their mouse.
-    document.addEventListener('mousemove', (e)=> {
+    canvas.addEventListener('mousemove', (e)=> {
       paddleX = e.offsetX;
     })
 
 		// Adds touch support
-		document.addEventListener('touchmove', (e)=> {
+		canvas.addEventListener('touchmove', (e)=> {
 			paddleX = e.touches[0].pageX - e.touches[0].target.offsetLeft;    
     })
 
@@ -322,8 +369,8 @@
     }
 
     // Starts the game on click or touch.
-		document.addEventListener('mousedown', start_game);
-		document.addEventListener('touchstart', start_game);
+		canvas.addEventListener('mousedown', start_game);
+		canvas.addEventListener('touchstart', start_game);
 
 		function start_game() {
 			if (screen_clicked) {
@@ -336,15 +383,13 @@
 
 		// Function is called if the player loses.
 		function gameOverFunction() {
+			ctx.fillStyle = elementColor;
+			ctx.font = "55px Helvetica";
 			if (win) {
 				// Displays "You Win!"
-				ctx.fillStyle = 'white';
-				ctx.font = "55px Helvetica";
 				ctx.fillText("You Win!", canvas.width/3.1, canvas.height/1.25);
 			} else {
 				// Displays "Game Over"
-				ctx.fillStyle = 'white';
-				ctx.font = "55px Helvetica";
 				ctx.fillText("Game Over", canvas.width/3.8, canvas.height/1.25);
 			}
 
@@ -371,6 +416,24 @@
 		// Displays the Game
 		createBricks();
 		redrawEverything();
+
+		// Theme 
+		document.getElementById('toggleTheme').addEventListener('click', ()=>{
+			if (isLightMode == true) {
+				backgroundColor = 'black';
+				elementColor = 'white';
+				document.body.style.backgroundColor = 'black';
+				canvas.style.border = '10px solid white';
+			} else {
+				backgroundColor = 'white';
+				elementColor = 'black';
+				document.body.style.backgroundColor = 'white';
+				canvas.style.border = '10px solid black';
+			}
+			isLightMode = !isLightMode;
+			paddleX = canvas.width/2 - paddleLong/2; 
+			redrawEverything();
+		})
 	</script>
 </body>
 </html>
