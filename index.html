@@ -304,6 +304,9 @@
     // Enables user to move the paddle with their mouse.
     canvas.addEventListener('mousemove', (e)=> {
       paddleX = e.offsetX;
+
+			// Makes the cursor reappear again if it is hidden.
+			document.body.style.cursor = "auto";
     })
 
 		// Adds touch support
@@ -337,6 +340,9 @@
 					}
 				break;
       }
+
+			// Hides the cursor
+			document.body.style.cursor = "none";
     })
 
 		// Makes paddle stop moving if key is released. 
